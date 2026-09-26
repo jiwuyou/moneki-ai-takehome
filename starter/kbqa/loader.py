@@ -8,8 +8,9 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Optional
+from html.parser import HTMLParser
 
-SUPPORTED_SUFFIXES = {".md", ".markdown"}
+SUPPORTED_SUFFIXES = {".md", ".markdown", ".txt", ".html", ".htm"}
 
 #: 文件名开头的编号就是 doc_id，与文件格式无关（契约 §0）。
 _DOC_ID = re.compile(r"^(KB-\d+)")
@@ -80,8 +81,47 @@ _HTML_TITLE = re.compile(r"<title>(.*?)</title>", re.S | re.I)
 
 
 def decode_bytes(raw: bytes, path: Path, warnings: list[str]) -> str:
-    """统一按 UTF-8 读。个别老文件里有怪字符，忽略掉就行，不影响检索。"""
-    return raw.decode("utf-8", errors="ignore")
+    """Decode current UTF-8 files and old OA exports without losing text."""
+    for encoding in ("utf-8", "gb18030", "latin-1"):
+        try:
+            text = raw.decode(encoding)
+            if encoding != "utf-8":
+                warnings.append("文件 %s 使用 %s 解码" % (path.name, encoding))
+            return text
+        except UnicodeDecodeError:
+            continue
+    return raw.decode("utf-8", errors="replace")
+
+
+class _VisibleHTML(HTMLParser):
+    """Keep visible HTML text while dropping scripts, styles and tags."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.parts: list[str] = []
+        self.hidden = 0
+
+    def handle_starttag(self, tag: str, attrs) -> None:  # noqa: ANN001
+        if tag.lower() in {"script", "style", "noscript"}:
+            self.hidden += 1
+        elif not self.hidden and tag.lower() in {"p", "div", "li", "br", "tr", "h1", "h2", "h3"}:
+            self.parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.lower() in {"script", "style", "noscript"} and self.hidden:
+            self.hidden -= 1
+        elif not self.hidden and tag.lower() in {"p", "div", "li", "tr", "h1", "h2", "h3"}:
+            self.parts.append("\n")
+
+    def handle_data(self, data: str) -> None:
+        if not self.hidden:
+            self.parts.append(data)
+
+
+def visible_html(text: str) -> str:
+    parser = _VisibleHTML()
+    parser.feed(text)
+    return html_module.unescape("".join(parser.parts)).strip()
 
 
 def parse_front_matter(text: str) -> tuple[dict, str]:
@@ -176,10 +216,11 @@ def load_document(path: Path) -> Optional[Document]:
     if fmt == "md":
         meta, text = parse_front_matter(text)
     elif fmt == "html":
-        # html 直接按文本入库，标签也就那么几个，BM25 自己会忽略。
+        # Use the title from the original document, but index visible text.
         match_title = _HTML_TITLE.search(text)
         html_title = html_module.unescape(match_title.group(1).strip()) if match_title else ""
         meta = {"title": html_title.split("-")[0].strip() or html_title}
+        text = visible_html(text)
 
     match = _DOC_ID.match(path.name)
     doc_id = str(meta.get("doc_id") or (match.group(1) if match else "")).strip()
