@@ -4,16 +4,21 @@ from __future__ import annotations
 
 import json
 from datetime import date
+from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .service import Service
 
 app = FastAPI(title="经营看板 + 问答服务", version="0.9.3")
 _service: Optional[Service] = None
+_PROJECT_DIR = Path(__file__).resolve().parents[2]
+_DASHBOARD_DIR = _PROJECT_DIR / "dashboard"
 
 
 def service() -> Service:
@@ -60,12 +65,12 @@ def _bad_date(*values: str) -> Optional[JSONResponse]:
 
 
 @app.get("/api/health")
-def health() -> dict:
+async def health() -> dict:
     return service().health()
 
 
 @app.get("/api/metrics/summary")
-def metrics_summary(
+async def metrics_summary(
     start: str = Query(...),
     end: str = Query(...),
     store_id: Optional[str] = None,
@@ -76,7 +81,7 @@ def metrics_summary(
 
 
 @app.get("/api/metrics/daily")
-def metrics_daily(
+async def metrics_daily(
     start: str = Query(...),
     end: str = Query(...),
     store_id: Optional[str] = None,
@@ -86,19 +91,30 @@ def metrics_daily(
     return bad or service().metrics_daily(start, end, store_id, product_id)
 
 
+@app.get("/api/metrics/top-products")
+async def metrics_top_products(
+    start: str = Query(...),
+    end: str = Query(...),
+    store_id: Optional[str] = None,
+    limit: int = Query(10, ge=1, le=100),
+):
+    bad = _bad_date(start, end)
+    return bad or service().metrics_top_products(start, end, store_id, limit)
+
+
 @app.post("/api/retrieve")
-def retrieve(request: RetrieveRequest) -> dict:
+async def retrieve(request: RetrieveRequest) -> dict:
     return service().retrieve(_as_text(request.query), request.top_k)
 
 
 @app.post("/api/chat")
-def chat(request: ChatRequest) -> dict:
+async def chat(request: ChatRequest) -> dict:
     session_id = _as_text(request.session_id) or None
     return service().chat(session_id, _as_text(request.question))
 
 
 @app.get("/api/trace/{trace_id}")
-def trace(trace_id: str):
+async def trace(trace_id: str):
     payload = service().get_trace(trace_id)
     if payload is None:
         return JSONResponse(status_code=404, content={"error": "没有这个 trace_id：%s" % trace_id})
@@ -106,11 +122,29 @@ def trace(trace_id: str):
 
 
 @app.get("/api/data_quality")
-def data_quality() -> dict:
+async def data_quality() -> dict:
     """第一关的“数据质量”面板：清洗掉了多少行、各因为什么。"""
     current = service()
     return {
         "cleaning_report": current.tools.cleaning_report(),
         "data_period": current.data_period,
+        "metric_policy": current.tools.metric_policy(),
+        "cleaned_at": current.tools.cleaned_at(),
         "kb_warnings": current.index.warnings,
     }
+
+
+@app.get("/api/stores")
+async def stores() -> dict:
+    return {"stores": service().tools.stores()}
+
+
+if _DASHBOARD_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=_DASHBOARD_DIR), name="dashboard-assets")
+
+
+@app.get("/", include_in_schema=False)
+async def dashboard_index():
+    if not (_DASHBOARD_DIR / "index.html").exists():
+        return JSONResponse(status_code=404, content={"error": "看板文件不存在"})
+    return FileResponse(_DASHBOARD_DIR / "index.html")

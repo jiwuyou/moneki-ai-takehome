@@ -50,7 +50,7 @@ class DataTools:
             self._local.conn = None
 
     def _where(self, start: str, end: str, store_id=None, product_id=None) -> tuple[str, list]:
-        clause = ["date >= ?", "date < ?"]
+        clause = ["date >= ?", "date <= ?"]
         params: list[Any] = [start, end]
         if store_id:
             clause.append("store_id = ?")
@@ -67,6 +67,16 @@ class DataTools:
         import json
 
         return json.loads(row[0]) if row else {}
+
+    def metric_policy(self) -> dict:
+        row = self.conn.execute("SELECT value FROM meta WHERE key='metric_policy'").fetchone()
+        import json
+
+        return json.loads(row[0]) if row and row[0] else {}
+
+    def cleaned_at(self) -> Optional[str]:
+        row = self.conn.execute("SELECT value FROM meta WHERE key='cleaned_at'").fetchone()
+        return str(row[0]) if row and row[0] else None
 
     def valid_sales_rows(self) -> int:
         return int(self.conn.execute("SELECT COUNT(*) FROM sales_clean").fetchone()[0])
@@ -91,16 +101,15 @@ class DataTools:
     # -- 指标 -------------------------------------------------------------------
 
     def query_metrics(self, start: str, end: str, store_id=None, product_id=None) -> dict:
-        """营业额、退款、订单数、客单价、销量。客单价 = 营业额 ÷ 明细行数。"""
+        """KB-001 metrics over an inclusive date range."""
         where, params = self._where(start, end, store_id, product_id)
-        # 退款行不是营业，直接排掉，省得把营业额算少了。
         row = self.conn.execute(
             """
             SELECT COALESCE(SUM(amount_cents), 0),
-                   0,
-                   COUNT(*),
-                   COALESCE(SUM(qty), 0)
-            FROM sales_clean WHERE %s AND is_refund = 0
+                   COALESCE(SUM(CASE WHEN is_refund = 1 THEN -amount_cents ELSE 0 END), 0),
+                   COUNT(DISTINCT CASE WHEN is_refund = 0 THEN order_id END),
+                   COALESCE(SUM(CASE WHEN is_refund = 0 THEN qty ELSE -qty END), 0)
+            FROM sales_clean WHERE %s
             """
             % where,
             params,
@@ -113,7 +122,7 @@ class DataTools:
             "store_id": store_id,
             "product_id": product_id,
             "net_revenue": yuan(net_cents),
-            "refund_amount": yuan(-refund_cents),
+            "refund_amount": yuan(refund_cents),
             "orders": orders,
             "aov": aov,
             "qty": qty,
@@ -194,7 +203,7 @@ class DataTools:
                    COUNT(DISTINCT CASE WHEN s.is_refund=0 THEN s.order_id END),
                    COALESCE(SUM(CASE WHEN s.is_refund=0 THEN s.qty ELSE -s.qty END), 0)
             FROM sales_clean s LEFT JOIN products p ON p.product_id = s.product_id
-            WHERE %s GROUP BY s.product_id ORDER BY 4 DESC
+            WHERE %s GROUP BY s.product_id ORDER BY 4 DESC, s.product_id
             """
             % where,
             params,

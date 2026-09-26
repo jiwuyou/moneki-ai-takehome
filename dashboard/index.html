@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>经营看板</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">MONEKI.AI · OPERATIONS</p>
+        <h1>经营看板</h1>
+        <p class="muted">数据口径由当前有效的知识库手册决定，指标直接来自清洗后的 POS 数据。</p>
+      </div>
+      <div id="policy" class="policy">读取口径中…</div>
+    </header>
+
+    <section class="filters panel">
+      <label>开始日期<input id="start" type="date" value="2026-06-01"></label>
+      <label>结束日期<input id="end" type="date" value="2026-06-30"></label>
+      <label>门店<select id="store"><option value="">全部门店</option></select></label>
+      <button id="refresh">更新看板</button>
+      <span id="status" class="muted"></span>
+    </section>
+
+    <section id="cards" class="cards"></section>
+
+    <section class="grid two">
+      <article class="panel">
+        <div class="section-title"><h2>每日净营业额</h2><span id="range-label" class="muted"></span></div>
+        <div id="chart" class="chart" aria-label="每日净营业额趋势图"></div>
+      </article>
+      <article class="panel">
+        <div class="section-title"><h2>Top 10 商品</h2><span class="muted">按净营业额</span></div>
+        <div class="table-wrap"><table><thead><tr><th>商品</th><th>净营业额</th><th>订单</th><th>销量</th></tr></thead><tbody id="products"></tbody></table></div>
+      </article>
+    </section>
+
+    <section class="panel quality">
+      <div class="section-title"><h2>数据质量</h2><span id="cleaned-at" class="muted"></span></div>
+      <div id="quality-grid" class="quality-grid"></div>
+    </section>
+  </main>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

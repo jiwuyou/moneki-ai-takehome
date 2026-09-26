@@ -21,6 +21,7 @@ from .sessions import SessionStore
 from .toolspec import TOOL_NAMES, TOOLS
 from .tools import DataTools
 from .trace import Trace, TraceStore
+from .policy_resolver import resolve_metric_policy
 
 _ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _INT_PARAMS = {"top_k", "limit"}
@@ -31,14 +32,17 @@ class Service:
         self.settings = settings or load_settings()
         self.sessions = SessionStore()
         self.traces = TraceStore()
-        self.rebuild(only_if_missing=True)
+        # Rebuild the small local SQLite database on startup so a changed
+        # source dataset or policy can never leave stale metrics in service.
+        self.rebuild(only_if_missing=False)
 
     # -- 启动与重建 -------------------------------------------------------------
 
     def rebuild(self, only_if_missing: bool = False) -> None:
         settings = self.settings
+        policy = resolve_metric_policy(settings.kb_dir, settings.today)
         if not only_if_missing or not settings.clean_db.exists():
-            build_clean_db(settings.source_db, settings.clean_db)
+            build_clean_db(settings.source_db, settings.clean_db, policy.as_dict())
         self.tools = DataTools(settings.clean_db)
         self.index = load_index(settings.kb_dir, settings.index_path, rebuild=not only_if_missing)
         self.retriever = Retriever(self.index, settings.today)
@@ -67,7 +71,7 @@ class Service:
         return {
             "status": "ok",
             "llm_mode": self.settings.llm_mode,
-            "kb_docs": sum(1 for path in self.settings.kb_dir.rglob("*") if path.is_file()),
+            "kb_docs": len(self.index.docs_meta),
             "kb_chunks": len(self.index.chunks),
             "valid_sales_rows": self.tools.valid_sales_rows(),
             "today": self.settings.today.isoformat(),
@@ -82,6 +86,9 @@ class Service:
 
     def metrics_daily(self, start: str, end: str, store_id=None, product_id=None) -> dict:
         return self.tools.daily_metrics(start, end, store_id, product_id)
+
+    def metrics_top_products(self, start: str, end: str, store_id=None, limit: int = 10) -> dict:
+        return self.tools.top_products(start, end, store_id, limit)
 
     def retrieve(self, query: str, top_k: int = 5) -> dict:
         """契约 §4：片段够就恰好给 top_k 条，不够才少给。
