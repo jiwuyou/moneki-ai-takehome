@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from .sanitize import split_sentences
+from .sanitize import is_instruction_like, split_sentences
 from .tokenizer import tokenize
 
 #: 契约 §5：一条 quote 不超过 400 个字符。
@@ -143,7 +143,7 @@ class UnitIndex:
             for line_id, line in enumerate(_lines_of(chunk.source_text, fmt)):
                 for sentence in split_sentences(line):
                     text = sentence.strip().lstrip("#").strip()
-                    if not text or text in seen:
+                    if not text or text in seen or is_instruction_like(text):
                         continue
                     seen.add(text)
                     kind = (
@@ -157,4 +157,3 @@ class UnitIndex:
                     units.append(unit)
         self._cache[doc_id] = units
         return units
-

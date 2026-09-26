@@ -15,7 +15,9 @@ from .tokenizer import normalise
 _TARGET = re.compile(r"目标[^。；\n]{0,12}?(\d[\d,]*(?:\.\d+)?)\s*(份|杯|单|件|元|%)")
 _PRICE = re.compile(r"(?:调整为|调为|现价|活动价|售价为|售价|价格为)\s*[¥￥]?\s*(\d+(?:\.\d+)?)")
 #: 解释异常时优先挑带因果说明的句子，而不是标题或整改措施。分两级。
-_CAUSE_EXPLICIT = re.compile(r"(原因|因为|由于|导致|受.{0,4}影响)")
+_CAUSE_EXPLICIT = re.compile(
+    r"(原因|因为|由于|导致|受.{0,4}影响|毛利率|损耗|成本|销量.{0,4}(末位|最低|低))"
+)
 _CAUSE_EVENT = re.compile(r"(故障|停业|整改|暂停|闭店|停售|检查|预警|停电|施工)")
 
 

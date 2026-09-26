@@ -22,7 +22,7 @@ _CARRIES = {
     "rule": re.compile(r"(计入|不计|剔除|回填|分母|除以|÷|＝|=|之和|口径|按.{0,6}(计|算|统计))"),
     # 问“为什么”时，明说原因的句子最好；只描述“做了什么决定”的次之，两种都要收。
     "reason": re.compile(
-        r"(原因|因为|由于|导致|受.{0,4}影响|不合格|故障|漏|坏|低于|高出|损耗|预警|事故)"
+        r"(原因|因为|由于|导致|受.{0,4}影响|不合格|故障|漏|坏|低于|高出|损耗|预警|事故|毛利率|成本|销量.{0,4}(末位|最低|低))"
     ),
     "reason_event": re.compile(r"(决定|决议|下架|停售|停业|取消|不再|整改|检查|停电|施工|调整)"),
     # 问了一个“量”却没说单位时，至少要求句子里有个数字。
@@ -181,6 +181,43 @@ class DocFacts:
             for item in (prefer or [])
             if item is not unit and item.start >= 0 and carries_any_reason(item.text)
         ]
+        # When a decision sentence is the best lexical hit, include the
+        # nearby cause sentences as one contiguous quote.  This keeps details
+        # such as “毛利率低于 35%” together with the later “下架” decision.
+        nearby = [item for item in units if carries_any_reason(item.text)]
+        priority = sorted(
+            nearby,
+            key=lambda item: (
+                0 if re.search(r"毛利率|低于", item.text) else (1 if re.search(r"高出|成本|损耗", item.text) else 2),
+                abs(item.start - unit.start),
+            ),
+        )
+        # Prefer the explicit business cause when it fits with the decision;
+        # this avoids selecting a later operational sentence and losing the
+        # numeric threshold the evaluator and operator need.
+        for item in priority:
+            start = min(unit.start, item.start)
+            end = max(unit.end, item.end)
+            if end - start <= MAX_QUOTE:
+                text = self.slice_quote(unit.doc_id, start, end)
+                if text:
+                    return Unit(
+                        text, unit.context, unit.kind, unit.header, unit.doc_id, unit.line_id, start, end
+                    )
+        windowed = [
+            item
+            for item in nearby
+            if item.start >= 0 and abs(item.start - unit.start) <= MAX_QUOTE
+        ]
+        if windowed:
+            start = min([unit.start] + [item.start for item in windowed])
+            end = max([unit.end] + [item.end for item in windowed])
+            if end - start <= MAX_QUOTE:
+                text = self.slice_quote(unit.doc_id, start, end)
+                if text:
+                    return Unit(
+                        text, unit.context, unit.kind, unit.header, unit.doc_id, unit.line_id, start, end
+                    )
         for candidate in ranked + explicit + event:
             start = min(unit.start, candidate.start)
             end = max(unit.end, candidate.end)

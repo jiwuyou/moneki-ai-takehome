@@ -71,6 +71,13 @@ class AliasTable:
                 continue
             position = lowered.find(alias)
             if position < 0:
+                # Chinese users often omit the product suffix: “三文鱼那次”
+                # should still expand to the canonical “三文鱼poke” and its
+                # English spelling in the supplier email.
+                chinese = "".join(char for char in alias if "\u3400" <= char <= "\u9fff")
+                if len(chinese) >= 2:
+                    position = lowered.find(chinese)
+            if position < 0:
                 alias_tokens = set(tokenize(alias))
                 if not alias_tokens:
                     continue

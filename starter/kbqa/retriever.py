@@ -9,7 +9,7 @@ from typing import Optional
 
 from .entities import wants_historical
 from .index import BM25Index, load_index
-from .tokenizer import content_tokens, tokenize
+from .tokenizer import content_tokens, normalise, tokenize
 
 ALIAS_WEIGHT = 0.6
 #: 单字（“月”“日”“店”）在二元组的世界里基本是噪声，降权但不丢弃。
@@ -158,6 +158,21 @@ class Retriever:
         for token in tokenize(query):
             weight = SINGLE_CHAR_WEIGHT if len(token) == 1 else 1.0
             weights[token] = weights.get(token, 0.0) + weight
+        # Cross-language business terms occur in the preserved supplier email
+        # and HTML FAQ.  Keep these expansions small and deterministic so the
+        # public retrieve endpoint and the answer path share the same behavior.
+        expansions = {
+            "赔": ("credit", "note", "settlement", "compensation"),
+            "赔了": ("credit", "note", "settlement", "compensation"),
+            "供应商": ("supplier", "vendor"),
+            "断供": ("shipment", "delivery", "supply", "rejected"),
+            "发票": ("invoice", "小程序"),
+        }
+        normalized = normalise(query)
+        for phrase, variants in expansions.items():
+            if phrase in normalized:
+                for token in variants:
+                    weights[token] = weights.get(token, 0.0) + 0.9
         return weights
 
     def _concept_scores(
@@ -237,7 +252,11 @@ class Retriever:
             if reason:
                 excluded.add(doc_id)
                 filtered.append({"doc_id": doc_id, "reason": reason})
-        allowed = set(range(len(self.index.chunks)))
+        allowed = {
+            position
+            for position, chunk in enumerate(self.index.chunks)
+            if chunk.doc_id not in excluded
+        }
 
         scores = self.index.score_terms(self._weights(query), allowed)
         concepts, expansions = self._concept_scores(query, allowed)
@@ -261,7 +280,6 @@ class Retriever:
             )
         adjusted.sort(key=lambda item: (-item[0], item[1]))
 
-        ordered = [self.index.chunks[position] for _, position in adjusted]
         hits: list[Hit] = []
         taken: set[int] = set()
         per_doc: dict[str, int] = {}
@@ -272,8 +290,6 @@ class Retriever:
             per_doc[chunk.doc_id] = per_doc.get(chunk.doc_id, 0) + 1
             taken.add(position)
             hit = self._hit(position, score, filtered)
-            # 第几条命中就取排序里的第几篇文档。
-            hit.doc_id = ordered[len(hits)].doc_id
             hits.append(hit)
             if len(hits) >= top_k:
                 break

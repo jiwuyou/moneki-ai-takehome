@@ -81,6 +81,14 @@ class Planner:
         standalone, inherited = self.followups.resolve(question, history or [])
         plan = Plan(question=question, standalone=standalone, search_query=standalone)
         history = history or []
+        if E.is_destructive(question):
+            plan.intent, plan.kind = "refusal", "destructive"
+            plan.refusal = "我不能删除、修改或补写销售数据；数据库保持只读。"
+            return plan
+        if E.is_prompt_probe(question):
+            plan.intent, plan.kind = "refusal", "prompt_probe"
+            plan.refusal = "我不能提供系统提示词、内部规则或数据库结构。"
+            return plan
         if not history and E.looks_like_follow_up(question) and len(question.strip()) <= 12:
             plan.intent, plan.kind = "clarify", "need_context"
             plan.refusal = "这句像是追问，但这个会话里没有上文。请把问题补完整，例如“7 月的净营业额是多少”。"
@@ -248,14 +256,9 @@ class Planner:
         else:
             plan.kind, plan.intent = "summary", "data"
 
-        # 路由：问“多少/多久/几”的就是要数字，问“为什么/原因”的就是要说法。
-        # 两边都走一遍太慢，没必要。
-        if E.has_any(text, ("多少", "多久", "几")):
-            plan.intent = "data"
-            if plan.kind in ("doc", "anomaly", "target", "price"):
-                plan.kind = "summary"
-        elif E.has_any(text, ("为什么", "原因", "怎么回事", "咋回事")):
-            plan.intent, plan.kind = "doc", "doc"
+        # Do not reinterpret document questions merely because they contain
+        # numeric words such as “多少/多久/几”.  The branch above already
+        # classified policy, target, price and anomaly questions.
 
         plan.slots["asks_why"] = bool(asks_why or abnormal)
         plan.slots["about_names"] = E.asks_about_names(text)
@@ -319,5 +322,3 @@ class Planner:
             elif key == "hours" and E.has_any(plan.standalone, ("营业到", "几点", "营业时间", "开门", "关门")):
                 parts.extend(words)
         plan.search_query = " ".join(parts)
-
-

@@ -5,9 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from .loader import Document
+from .sanitize import sanitize
 
 #: 切块参数变了，索引缓存必须失效，所以写进缓存键里。
-CHUNKER_VERSION = "chunker-2"
+CHUNKER_VERSION = "chunker-4"
 
 CHUNK_SIZE = 300
 
@@ -35,11 +36,48 @@ class Chunk:
 
 
 def chunk_document(document: Document) -> list[Chunk]:
-    """一篇文档按固定长度切开，300 字一块。"""
-    text = document.text
+    """Split text while keeping Markdown tables as citeable units."""
+    # Knowledge-base text is untrusted data.  Instruction-like sentences are
+    # excluded from retrieval context; the original full text remains in the
+    # index for citation verification.
+    text, _dropped = sanitize(document.text)
     chunks: list[Chunk] = []
-    for number, start in enumerate(range(0, len(text) - CHUNK_SIZE, CHUNK_SIZE), start=1):
-        piece = text[start : start + CHUNK_SIZE]
+    segments: list[tuple[str, str, list[str]]] = []
+    normal: list[str] = []
+
+    def flush_normal() -> None:
+        nonlocal normal
+        body = "\n".join(normal).strip()
+        if body:
+            for start in range(0, len(body), CHUNK_SIZE):
+                piece = body[start : start + CHUNK_SIZE]
+                segments.append((piece, "text", []))
+        normal = []
+
+    lines = text.splitlines()
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        if (
+            line.strip().startswith("|")
+            and index + 1 < len(lines)
+            and lines[index + 1].strip().startswith("|")
+            and set(lines[index + 1].strip()) <= set("|:- ")
+        ):
+            flush_normal()
+            header = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            table_lines = [line, lines[index + 1]]
+            index += 2
+            while index < len(lines) and lines[index].strip().startswith("|"):
+                table_lines.append(lines[index])
+                index += 1
+            segments.append(("\n".join(table_lines), "table", header))
+            continue
+        normal.append(line)
+        index += 1
+    flush_normal()
+
+    for number, (piece, kind, header) in enumerate(segments, start=1):
         chunks.append(
             Chunk(
                 doc_id=document.doc_id,
@@ -47,6 +85,8 @@ def chunk_document(document: Document) -> list[Chunk]:
                 text=piece,
                 source_text=piece,
                 heading=document.title,
+                kind=kind,
+                table_header=header,
             )
         )
     if not chunks:

@@ -25,7 +25,7 @@ RETRIEVAL_SOFT_GATE = 12.0
 #: 问得太泛时的反问阈值：检索连一个像样的命中都没有。
 CLARIFY_SCORE = 8.0
 #: 拼给作答用的资料最长多少字，太长了没必要。
-MAX_CONTEXT_CHARS = 200
+MAX_CONTEXT_CHARS = 1000
 
 
 class Answerer(HybridAnswers):
@@ -74,11 +74,14 @@ class Answerer(HybridAnswers):
         candidates = self._candidates(plan, result, require_value=True)
         if not candidates:
             candidates = self._candidates(plan, result, require_value=False)
-        candidates.sort(key=lambda item: (round(item["score"], 2), item["effective_from"]))
+        candidates.sort(
+            key=lambda item: (round(item["score"], 6), item["effective_from"]),
+            reverse=True,
+        )
         lines: list[str] = []
         citations: list[dict] = []
         used_terms: set[str] = set()
-        best_score = candidates[0]["raw"] if candidates else 0.0
+        best_score = max((candidate["raw"] for candidate in candidates), default=0.0)
         query_terms = set(content_tokens(plan.search_query))
         best = candidates[0]["score"] if candidates else 0.0
         for candidate in candidates:
@@ -351,4 +354,4 @@ class Answerer(HybridAnswers):
                 answer_type="clarify",
                 notes=["检索最高分 %.1f，且问题里没有指标、时间或门店" % top_score],
             )
-        return Answer(answer=self._context(result) + body, answer_type="doc", citations=citations)
+        return Answer(answer=body, answer_type="doc", citations=citations)
