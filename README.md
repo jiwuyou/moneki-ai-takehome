@@ -53,6 +53,8 @@ make rebuild                                  # 从 ../data 和 ../knowledge_bas
 make run                                      # 服务起在 http://localhost:8000
 ```
 
+完成第一关后，打开 `http://localhost:8000/` 查看看板；看板包含日期和门店筛选、每日营业额趋势、Top 10 商品及数据质量。第一关的口径选择和验证记录见 [`FIRST_STAGE.md`](FIRST_STAGE.md)。
+
 终端 B，在作业包根目录（也就是这份 README 所在的目录）：
 
 ```bash

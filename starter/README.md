@@ -12,6 +12,10 @@ make run        # 起服务，默认 http://127.0.0.1:8000
 make test       # 跑测试
 ```
 
+启动后打开 <http://127.0.0.1:8000/> 查看第一关看板。页面提供日期与门店筛选、每日净营业额趋势、Top 10 商品和数据质量面板。
+
+重建时会先从知识库选择截至 2026-09-01 生效的现行指标手册，再按该手册清洗 POS 数据；当前数据的口径来源会写入 `/api/data_quality` 和 `meta` 表。
+
 换一套数据或知识库：
 
 ```bash
@@ -49,6 +53,8 @@ make rebuild DATA_DIR=/path/to/data KB_DIR=/path/to/knowledge_base
 | POST | `/api/chat` |
 | GET | `/api/trace/{trace_id}` |
 | GET | `/api/data_quality` |
+| GET | `/api/metrics/top-products` |
+| GET | `/api/stores` |
 
 ## 两种模式
 
