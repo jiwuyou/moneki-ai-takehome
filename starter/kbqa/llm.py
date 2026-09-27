@@ -85,6 +85,9 @@ class LLMClient:
             "tools": len(tools or []),
             # 契约 §6：trace 里要看得到发给模型的最终提示词。
             "prompt": _preview(json.dumps(messages, ensure_ascii=False)),
+            # Full request body for the trace/proxy review.  Authentication is
+            # deliberately excluded; tools and messages are safe to inspect.
+            "request": body,
         }
         try:
             response = httpx.post(

@@ -66,6 +66,16 @@ class LiveEngine:
             reply = self.client.chat_with_retry(
                 messages, TOOLS, budget=remaining, on_call=trace.llm
             )
+            trace.step(
+                "live_round",
+                {
+                    "round": round_index,
+                    "finish_reason": reply.finish_reason,
+                    "tool_calls": [
+                        (call.get("function") or {}).get("name") for call in reply.tool_calls
+                    ],
+                },
+            )
             if not reply.tool_calls:
                 return self._finalise(plan, reply.content, evidence, retrieved, trace)
             # D8：assistant 消息整条追加，含 reasoning_content，否则下一轮 400。
@@ -138,10 +148,31 @@ class LiveEngine:
         for match in _DOC_MARK.finditer(content):
             if match.group(1) not in doc_ids:
                 doc_ids.append(match.group(1))
+        # If the model answered from a search result but omitted the marker,
+        # use the highest-ranked retrieved documents as candidates.  Citation
+        # text is still selected and verified by code below.
+        for raw_results in retrieved.values():
+            for item in raw_results:
+                doc_id = item.get("doc_id") if isinstance(item, dict) else None
+                if doc_id and doc_id not in doc_ids:
+                    doc_ids.append(doc_id)
+                if len(doc_ids) >= 3:
+                    break
+            if len(doc_ids) >= 3:
+                break
         text = _DOC_MARK.sub("", content).strip()
         citations = self._citations(plan, doc_ids)
         allowed = self._allowed_numbers(plan, evidence, citations)
         bad = [value for value in _numbers_in(text) if not _matches(value, allowed)]
+        trace.step(
+            "final_validation",
+            {
+                "answer_chars": len(text),
+                "citation_doc_ids": [item["doc_id"] for item in citations],
+                "unmatched_numbers": bad[:10],
+                "evidence_count": len(evidence),
+            },
+        )
         if bad:
             trace.step("number_check_failed", {"unmatched": bad[:5]})
             fallback = self.answerer.answer(plan, trace)

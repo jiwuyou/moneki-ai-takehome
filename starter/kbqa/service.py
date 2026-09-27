@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 import time
 from typing import Any, Optional
 
@@ -107,6 +108,8 @@ class Service:
         schema = next(
             tool["function"]["parameters"] for tool in TOOLS if tool["function"]["name"] == name
         )
+        if not isinstance(params, dict):
+            return {"error": "工具参数必须是 JSON 对象"}
         cleaned: dict[str, Any] = {}
         for key, value in (params or {}).items():
             if key not in schema["properties"]:
@@ -116,6 +119,10 @@ class Service:
                     cleaned[key] = int(value)
                 except (TypeError, ValueError):
                     return {"error": "参数 %s 应该是整数，收到 %r" % (key, value)}
+                if key == "limit" and not 1 <= cleaned[key] <= 100:
+                    return {"error": "参数 limit 必须在 1 到 100 之间"}
+                if key == "top_k" and not 1 <= cleaned[key] <= 50:
+                    return {"error": "参数 top_k 必须在 1 到 50 之间"}
                 continue
             if value is None:
                 continue
@@ -123,10 +130,25 @@ class Service:
             if key.startswith(("start", "end")) or key == "date":
                 if not _ISO_DATE.match(text):
                     return {"error": "参数 %s 必须是 YYYY-MM-DD，收到 %r" % (key, value)}
+                try:
+                    date.fromisoformat(text)
+                except ValueError:
+                    return {"error": "参数 %s 不是有效日期，收到 %r" % (key, value)}
+            if key == "store_id" and text.upper() not in set(self.catalog.store_ids()):
+                return {"error": "不存在的门店编号：%s" % text}
+            if key == "product_id" and text.upper() not in {
+                product["product_id"] for product in self.catalog.products
+            }:
+                return {"error": "不存在的商品编号：%s" % text}
             cleaned[key] = text
         for key in schema.get("required", []):
             if key not in cleaned:
                 return {"error": "缺少必填参数 %s" % key}
+        for left, right in (("start", "end"), ("start_a", "end_a"), ("start_b", "end_b")):
+            if left in cleaned and right in cleaned and cleaned[left] > cleaned[right]:
+                return {"error": "%s 不能晚于 %s" % (left, right)}
+        if name == "run_sql" and "sql" not in cleaned:
+            return {"error": "缺少必填参数 sql"}
         try:
             if name == "search_kb":
                 return self.retrieve(cleaned["query"], cleaned.get("top_k", 5))
@@ -174,7 +196,9 @@ class Service:
                 },
             )
             return answer
-        except Exception:  # noqa: BLE001 - 不管里面出什么事，接口都得给个像样的回答
+        except Exception as exc:  # noqa: BLE001 - 接口必须返回结构化拒答
+            trace.error("answer", exc)
+            trace.step("answer_failed", {"type": type(exc).__name__, "detail": str(exc)})
             return Answer(
                 answer="抱歉，我暂时无法回答。",
                 answer_type="refusal",

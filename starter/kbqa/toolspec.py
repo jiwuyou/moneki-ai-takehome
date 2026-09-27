@@ -81,7 +81,7 @@ TOOLS = [
     ),
     _fn(
         "run_sql",
-        "在清洗表上执行一条 SQL，工具覆盖不到的查法用这个。",
+        "在清洗后的业务表上执行一条只读 SELECT/WITH SQL；禁止写操作、系统表和多条语句。",
         {"sql": {"type": "string", "description": "要执行的 SQL 语句"}},
         ["sql"],
     ),

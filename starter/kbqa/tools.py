@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 import threading
+import re
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
@@ -12,6 +13,32 @@ from typing import Any, Optional
 from .cleaning import open_readonly
 
 METRIC_FIELDS = ("net_revenue", "refund_amount", "orders", "aov", "qty")
+_SQL_FORBIDDEN = re.compile(
+    r"\b(?:attach|alter|create|delete|detach|drop|grant|insert|pragma|replace|reindex|vacuum|update)\b",
+    re.I,
+)
+
+
+def validate_readonly_sql(sql: str) -> str:
+    """Allow one SELECT/WITH query against the cleaned business database."""
+    text = str(sql or "").strip()
+    if not text:
+        raise ValueError("SQL 不能为空")
+    if "\x00" in text:
+        raise ValueError("SQL 含有非法字符")
+    statements = [part.strip() for part in text.split(";") if part.strip()]
+    if len(statements) != 1:
+        raise ValueError("只允许执行一条只读 SQL")
+    statement = statements[0]
+    if not re.match(r"^(?:select\b|with\b)", statement, re.I):
+        raise ValueError("只允许 SELECT 或 WITH 查询")
+    if _SQL_FORBIDDEN.search(statement) or re.search(r"\bsqlite_master\b|\bsqlite_schema\b", statement, re.I):
+        raise ValueError("SQL 包含禁止的写操作或系统表")
+    if not re.search(r"\bfrom\b", statement, re.I):
+        raise ValueError("查询必须包含 FROM")
+    if not re.search(r"\b(?:sales_clean|stores|products|meta)\b", statement, re.I):
+        raise ValueError("SQL 只能查询清洗后的业务表")
+    return statement
 
 
 def yuan(cents: int) -> float:
@@ -82,10 +109,10 @@ class DataTools:
         return int(self.conn.execute("SELECT COUNT(*) FROM sales_clean").fetchone()[0])
 
     def run_sql(self, sql: str) -> dict:
-        """执行一条 SQL。工具覆盖不到的查法，让模型自己写。"""
+        """Execute one bounded, read-only query over cleaned tables."""
+        sql = validate_readonly_sql(sql)
         cursor = self.conn.execute(sql)
         rows = [dict(row) for row in cursor.fetchall()] if cursor.description else []
-        self.conn.commit()
         return {"sql": sql, "rows": rows[:50], "row_count": len(rows)}
 
     def stores(self) -> list[dict]:

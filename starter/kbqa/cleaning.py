@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from urllib.parse import quote
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
@@ -85,8 +86,9 @@ class CleaningReport:
 
 
 def open_readonly(path: Path) -> sqlite3.Connection:
-    """打开数据库。"""
-    conn = sqlite3.connect(path.as_posix(), check_same_thread=False)
+    """Open a SQLite database in read-only URI mode."""
+    uri = "file:%s?mode=ro" % quote(path.resolve().as_posix(), safe="/")
+    conn = sqlite3.connect(uri, uri=True, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 
