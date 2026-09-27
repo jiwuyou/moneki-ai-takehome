@@ -1,5 +1,15 @@
 # 公开评测报告
 
+## 分数记录总表
+
+| 阶段 | 命令 | commit | 模型与关键配置 | Key | 结果 |
+|---|---|---|---|---|---:|
+| starter 初始基线 | `python3 eval/run_eval.py --base-url http://127.0.0.1:8000 --questions eval/public_questions.jsonl` | `357bb72` | mock 路径，未配置模型变量 | 否 | **43 / 100** |
+| 最终 mock 回归 | 同上 | `3413f14` | mock 路径 | 否 | **100 / 100** |
+| DeepSeek live 重跑 | 同上 | `3b2e0fa` | `deepseek-flash`，`LLM_BASE_URL=https://api.deepseek.com` | 是 | **94 / 100** |
+
+Key 从未写入命令输出、仓库、报告或 Git；命令中的 Key 已省略。
+
 ## Mock 模式
 
 - 代码 commit：`3413f14`

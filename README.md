@@ -1,4 +1,83 @@
-# Moneki.ai 全栈开发工程师（AI 产品）实习：实操作业
+# Moneki.ai 经营看板与 AI 运营助手
+
+## 项目实现说明
+
+本项目提供一套基于 POS 数据和公司知识库的经营看板与运营问答服务。系统固定使用 `2026-09-01` 作为“今天”，指标按照知识库当前有效的 `KB-001` 口径计算。
+
+### 三步启动
+
+```bash
+cd starter
+make setup
+make rebuild && make run
+```
+
+打开 <http://127.0.0.1:8000/> 查看看板。没有配置模型 Key 时服务使用 mock/RAG 路径；配置 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL` 后进入 DeepSeek live 路径。
+
+### 重建数据和索引
+
+替换 `data/` 或 `knowledge_base/` 后执行：
+
+```bash
+cd starter
+make rebuild DATA_DIR=/path/to/data KB_DIR=/path/to/knowledge_base
+```
+
+重建会重新选择现行指标手册、生成 `var/clean.db`、刷新知识库索引，并把口径来源写入 `/api/data_quality`。
+
+### 架构图
+
+```text
+┌───────────────┐     ┌────────────────────┐
+│ 看板 / 对话框 │────▶│ FastAPI API        │
+└───────────────┘     └──────┬─────────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ▼              ▼              ▼
+       清洗 SQLite       Retriever       Session/Trace
+       DataTools         DocFacts        持久化 JSON
+              │              │              │
+              ▼              ▼              ▼
+           POS 数据       知识库文档      /api/chat
+                                             │
+                                  mock Answerer / live DeepSeek
+                                             │
+                                  工具、证据和引用校验
+```
+
+### 主要接口
+
+| 方法 | 路径 | 用途 |
+|---|---|---|
+| GET | `/api/health` | 健康状态和清洗信息 |
+| GET | `/api/metrics/summary` | 区间指标 |
+| GET | `/api/metrics/daily` | 逐日指标 |
+| GET | `/api/metrics/top-products` | Top 商品 |
+| GET | `/api/data_quality` | 清洗原因和口径来源 |
+| POST | `/api/retrieve` | 知识库检索 |
+| POST | `/api/chat` | mock/live 问答 |
+| GET | `/api/trace/{trace_id}` | 调试 trace |
+
+### 选型和取舍
+
+- FastAPI 直接暴露契约 API，并托管静态看板，评审只需启动一个服务。
+- SQLite 保留 POS 关系结构；指标全部由清洗表 SQL 计算，便于独立核算。
+- BM25、别名和文档元数据不依赖外部向量服务，替换知识库后可离线重建。
+- DeepSeek 采用 OpenAI 兼容协议；模型只负责理解和工具编排，代码负责数字、引用、权限和 fallback。
+- 当前口径优先选择截至系统日期生效且状态为“现行”的 `KB-001`。退款保留并计入净营业额，空金额剔除，建档价不覆盖 POS 实收。
+- 周报、会议纪要和活动复盘中的估算只作背景；没有可靠原因时返回已确认数字并明确说明未找到原因。
+
+### 验证入口
+
+- 第一关口径和清洗记录：[`FIRST_STAGE.md`](FIRST_STAGE.md)
+- 第二关根因和回归：[`DEBUG_LOG.md`](DEBUG_LOG.md)
+- 模型接入：[`LLM_SETUP.md`](LLM_SETUP.md)
+- 演示步骤：[`DEMO.md`](DEMO.md)
+- 评测记录：[`EVAL_REPORT.md`](EVAL_REPORT.md)
+
+---
+
+# Moneki.ai 全栈开发工程师（AI 产品）实操作业
 
 ## 时间
 
@@ -86,6 +165,23 @@ FastAPI / 看板
 - 数字由数据库工具提供，文档引用由代码从原文逐字生成。
 - 结构化指标、目标、价格和异常问题优先使用确定性路径；live Agent 负责开放式理解和工具编排。
 - trace 同时保存在内存和 `starter/var/traces/`，服务重启后仍可复盘。
+
+### 选型理由
+
+- FastAPI 适合快速暴露契约要求的 JSON API，并能直接托管看板静态文件。
+- SQLite 保留 POS 的原始关系结构，清洗后继续使用 SQL 计算指标，便于独立核算。
+- BM25 和规则化别名不依赖外部向量服务，换数据或知识库后可以离线重建。
+- DeepSeek 使用 OpenAI 兼容协议和环境变量接入，mock/live 两条路径共享工具和证据校验。
+- 原生 HTML/CSS/JavaScript 看板不引入额外前端构建链，评审只需启动一个服务。
+
+### 口径和歧义取舍
+
+- 当前指标口径选择截至 2026-09-01 生效且状态为“现行”的 `KB-001`；已废止的 `KB-002` 只能在明确询问历史口径时使用。
+- 空金额直接剔除，不用商品建档价回填；完全重复行去重，同订单不同商品行保留。
+- 退款行保留并计入净营业额，退款金额单独返回；订单数按销售行去重订单号计算。
+- 商品现行售价以通知和 POS 实收为准，`products.unit_price` 只作为建档价参考。
+- 周报、会议纪要和活动复盘中的人工估算不能覆盖数据库结果。
+- 无法确定原因时给出已确认数字，并明确说明知识库没有找到原因，不猜测。
 
 第一关口径和验证见 [`FIRST_STAGE.md`](FIRST_STAGE.md)，第二关根因见 [`DEBUG_LOG.md`](DEBUG_LOG.md)，演示步骤见 [`DEMO.md`](DEMO.md)。
 
