@@ -86,6 +86,7 @@ def test_live_engine_replays_reasoning_and_supports_multiple_tools():
     assert answer.data_evidence
     assert answer.citations and answer.citations[0]["doc_id"] == "KB-023"
     assert len(fake.calls) == 2
+    assert any("initial_retrieval" in message.get("content", "") for message in fake.calls[0] if message.get("role") == "system")
     second = fake.calls[1]
     assistant = next(message for message in second if message.get("role") == "assistant")
     assert assistant["reasoning_content"] == "need data and target"

@@ -49,6 +49,8 @@ Authorization: Bearer <LLM_API_KEY>
 
 带工具调用的 assistant 消息会整体追加回下一轮 messages，保留 `reasoning_content`、`content` 和 `tool_calls`。
 
+live 文档/混合问题采用两阶段检索：代码先用当前问题和会话主题做一次初始 Retriever 查询；模型看到初始片段后，最多生成一次精炼 `search_kb` 查询；代码执行精炼检索，再由模型基于最终片段和数据工具结果回答。相同回合不会无限重复 `search_kb`。
+
 ## 5. 如何观察完整请求
 
 ### 预检假模型
