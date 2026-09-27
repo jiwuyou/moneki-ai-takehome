@@ -64,6 +64,31 @@ python3 eval/run_eval.py --base-url http://localhost:8000 --questions eval/publi
 starter 本来就有问题，第一次跑分很低是正常的。
 评测脚本只依赖 Python 标准库，更多用法见 `eval/README.md`。
 
+## 实现说明
+
+### 架构
+
+```text
+FastAPI / 看板
+  ├─ 指标 API → 清洗后的 SQLite
+  └─ /api/chat
+       ├─ Session transcript + Planner
+       ├─ mock Answerer/RAG
+       └─ live LiveEngine → DeepSeek → 只读工具 → 证据校验
+```
+
+模型配置只通过 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL` 读取。未配置 Key 时服务使用 mock 路径；配置后进入 live 工具调用路径。接口、请求观测和预检方式见 [`LLM_SETUP.md`](LLM_SETUP.md)。
+
+### 关键取舍
+
+- 当前有效的指标口径由知识库元数据解析选择，数据清洗和指标计算不依赖模型。
+- 文档内容是资料，不是指令；提示注入和旧版本不能覆盖业务规则。
+- 数字由数据库工具提供，文档引用由代码从原文逐字生成。
+- 结构化指标、目标、价格和异常问题优先使用确定性路径；live Agent 负责开放式理解和工具编排。
+- trace 同时保存在内存和 `starter/var/traces/`，服务重启后仍可复盘。
+
+第一关口径和验证见 [`FIRST_STAGE.md`](FIRST_STAGE.md)，第二关根因见 [`DEBUG_LOG.md`](DEBUG_LOG.md)，演示步骤见 [`DEMO.md`](DEMO.md)。
+
 任务分四关。
 请按顺序做，一关做扎实了再进下一关。
 
