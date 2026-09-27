@@ -6,6 +6,73 @@ const api = async (path) => {
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
   return response.json();
 };
+let chatSessionId = crypto.randomUUID();
+
+function addChatMessage(role, text, meta = "") {
+  const container = $("chat-messages");
+  const empty = container.querySelector(".chat-empty");
+  if (empty) empty.remove();
+  const node = document.createElement("div");
+  node.className = `chat-message ${role}`;
+  node.textContent = text;
+  if (meta) {
+    const label = document.createElement("div");
+    label.className = "meta";
+    label.textContent = meta;
+    node.appendChild(label);
+  }
+  container.appendChild(node);
+  container.scrollTop = container.scrollHeight;
+}
+
+function renderTrace(trace) {
+  $("trace-panel").classList.remove("hidden");
+  $("trace-title").textContent = trace.trace_id || "";
+  const steps = trace.steps || [];
+  const tools = steps.filter((step) => step.step === "tool").length;
+  const searches = steps.filter((step) => ["search", "rag_initial", "rag_refinement"].includes(step.step)).length;
+  $("trace-summary").innerHTML = [
+    ["总耗时", `${trace.total_ms ?? "—"} ms`],
+    ["步骤", steps.length],
+    ["工具调用", tools],
+    ["检索步骤", searches],
+  ].map(([label, value]) => `<div class="trace-stat"><small>${label}</small><strong>${value}</strong></div>`).join("");
+  $("trace-steps").textContent = JSON.stringify(steps, null, 2);
+  $("trace-llm").textContent = JSON.stringify(trace.llm_calls || [], null, 2);
+  $("trace-errors").textContent = JSON.stringify(trace.errors || [], null, 2);
+}
+
+async function sendChat() {
+  const input = $("chat-input");
+  const question = input.value.trim();
+  if (!question) return;
+  addChatMessage("user", question);
+  input.value = "";
+  $("chat-status").textContent = "分析中…";
+  $("chat-send").disabled = true;
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {"content-type": "application/json"},
+      body: JSON.stringify({session_id: chatSessionId, question}),
+    });
+    const data = await response.json();
+    const citationText = (data.citations || []).map((item) => item.doc_id).join(", ");
+    const evidenceText = data.data_evidence?.length ? ` · 数据证据 ${data.data_evidence.length} 条` : "";
+    addChatMessage("assistant", data.answer || "没有回答内容", `${data.answer_type || ""}${citationText ? ` · 引用 ${citationText}` : ""}${evidenceText}`);
+    if (data.trace_id) {
+      const trace = await api(`/api/trace/${encodeURIComponent(data.trace_id)}`);
+      renderTrace(trace);
+    }
+    $("chat-status").textContent = "已完成";
+  } catch (error) {
+    addChatMessage("assistant", `请求失败：${error.message}`);
+    $("chat-status").textContent = "请求失败";
+  } finally {
+    $("chat-send").disabled = false;
+    input.focus();
+  }
+}
 
 async function loadCatalog() {
   const health = await api("/api/health");
@@ -68,4 +135,15 @@ async function refresh() {
 }
 
 $("refresh").addEventListener("click", refresh);
+$("chat-send").addEventListener("click", sendChat);
+$("chat-input").addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) sendChat();
+});
+$("new-chat").addEventListener("click", () => {
+  chatSessionId = crypto.randomUUID();
+  $("chat-messages").innerHTML = `<div class="chat-empty">新会话已创建，可以开始提问。</div>`;
+  $("trace-panel").classList.add("hidden");
+  $("chat-status").textContent = "";
+  $("chat-input").focus();
+});
 loadCatalog().then(refresh).catch((error) => { $("status").textContent = `初始化失败：${error.message}`; });

@@ -42,6 +42,24 @@
       <div class="section-title"><h2>数据质量</h2><span id="cleaned-at" class="muted"></span></div>
       <div id="quality-grid" class="quality-grid"></div>
     </section>
+
+    <section class="panel assistant-panel">
+      <div class="section-title"><h2>运营助手</h2><button id="new-chat" class="button-secondary">新建会话</button></div>
+      <div id="chat-messages" class="chat-messages"><div class="chat-empty">可以询问营业额、政策、活动目标或异常原因。</div></div>
+      <div class="chat-compose">
+        <textarea id="chat-input" rows="2" placeholder="例如：618 当天 S02 的牛肉poke 卖了多少份，达到目标了吗？"></textarea>
+        <button id="chat-send">发送</button>
+      </div>
+      <div id="chat-status" class="muted"></div>
+    </section>
+
+    <section id="trace-panel" class="panel trace-panel hidden">
+      <div class="section-title"><h2>本次回答调试信息</h2><span id="trace-title" class="muted"></span></div>
+      <div id="trace-summary" class="trace-summary"></div>
+      <details><summary>检索与工具步骤</summary><pre id="trace-steps"></pre></details>
+      <details><summary>模型请求与原始输出</summary><pre id="trace-llm"></pre></details>
+      <details><summary>错误</summary><pre id="trace-errors"></pre></details>
+    </section>
   </main>
   <script src="/assets/app.js"></script>
 </body>
