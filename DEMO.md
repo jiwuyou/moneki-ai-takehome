@@ -65,6 +65,54 @@ curl -sS -X POST http://127.0.0.1:8000/api/chat \
 
 具体数字以当前数据和当次模型调用结果为准。
 
+### 一次真实 DeepSeek 调用记录（2026-09-27）
+
+本次使用 `LLM_MODEL=deepseek-flash`、`LLM_BASE_URL=https://api.deepseek.com`，Key 通过临时环境变量注入。
+
+实际提问：
+
+```text
+618 当天 S02 的牛肉poke 卖了多少份？达到目标了吗？
+```
+
+实际返回的核心结果：
+
+```text
+2026-06-18（S02 Makai Poke）（牛肉poke）：销量 125 件，净营业额 3625.00 元，有效订单数 53 单，客单价 68.40 元，退款金额 0.00 元。目标为 120 份（KB-023《2026 年 618 活动方案》），实际 125 份，已达标，超出 5 份。
+```
+
+实际 `data_evidence`：
+
+```json
+{
+  "tool": "query_metrics",
+  "params": {
+    "start": "2026-06-18",
+    "end": "2026-06-18",
+    "store_id": "S02",
+    "product_id": "P06"
+  },
+  "result": {
+    "net_revenue": 3625.0,
+    "refund_amount": 0.0,
+    "orders": 53,
+    "aov": 68.4,
+    "qty": 125
+  }
+}
+```
+
+实际 `citation`：
+
+```json
+{
+  "doc_id": "KB-023",
+  "quote": "**当天牛肉poke 目标销量 120 份。"
+}
+```
+
+本次响应的 `answer_type` 为 `hybrid`，`trace_id` 为 `t-20260901-0081`。trace 中可以看到：代码初始检索命中 KB-023，模型生成一次精炼查询，代码执行 `search_kb`，随后完成数据库工具调用和最终证据校验。
+
 ### 完整示例
 
 提问：
