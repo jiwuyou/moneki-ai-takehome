@@ -1,0 +1,6 @@
+{"id":"D03","business":"核心数据正确，evidence_hygiene 仅警告"}
+{"id":"D04","business":"只判断客单价方向，忽略退款等其他指标方向"}
+{"id":"D06","business":"核心销量正确，evidence_hygiene 仅警告"}
+{"id":"C02","business":"核心过敏原和引用正确，cite_max 仅警告"}
+{"id":"H04","business":"当前售价和建档价结论正确，evidence_hygiene 仅警告"}
+{"id":"H06","business":"必须回答零营业额事实，并说明是否找到原因"}
