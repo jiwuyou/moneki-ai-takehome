@@ -1,18 +1,18 @@
 {
-  "source_report": "2026-09-27 07:14:08",
+  "source_report": "2026-09-27 09:02:22",
   "official": {
     "points": 100.0,
-    "earned": 86.0,
-    "ratio": 0.86,
+    "earned": 87.0,
+    "ratio": 0.87,
     "questions": 55,
     "passed": 49
   },
   "business": {
     "points": 100.0,
-    "earned": 97.0,
-    "ratio": 0.97,
+    "earned": 89.0,
+    "ratio": 0.89,
     "questions": 55,
-    "passed": 54
+    "passed": 51
   },
   "questions": [
     {
@@ -24,7 +24,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "M02",
@@ -35,7 +36,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "M03",
@@ -46,7 +48,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "M04",
@@ -57,7 +60,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "M05",
@@ -68,7 +72,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "M06",
@@ -79,7 +84,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R01",
@@ -90,7 +96,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R02",
@@ -101,7 +108,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R03",
@@ -112,7 +120,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R04",
@@ -123,7 +132,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R05",
@@ -134,7 +144,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R06",
@@ -145,7 +156,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R07",
@@ -156,7 +168,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R08",
@@ -167,7 +180,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R09",
@@ -178,7 +192,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R10",
@@ -189,7 +204,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R11",
@@ -200,7 +216,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R12",
@@ -211,7 +228,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R13",
@@ -222,7 +240,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R14",
@@ -233,7 +252,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "R15",
@@ -244,7 +264,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "D01",
@@ -255,7 +276,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "D02",
@@ -266,41 +288,32 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "D03",
       "category": "data",
-      "official_passed": false,
+      "official_passed": true,
       "business_passed": true,
-      "official_earned": 0.0,
+      "official_earned": 2.0,
       "points": 2.0,
-      "warnings": [
-        {
-          "code": "evidence_hygiene",
-          "severity": "warning",
-          "message": "工具结果过多，但不代表核心业务结论错误"
-        }
-      ],
+      "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": "核心数据正确，evidence_hygiene 仅警告"
     },
     {
       "id": "D04",
       "category": "data",
-      "official_passed": false,
+      "official_passed": true,
       "business_passed": true,
-      "official_earned": 0.0,
+      "official_earned": 2.0,
       "points": 2.0,
-      "warnings": [
-        {
-          "code": "direction_extra_metric",
-          "severity": "warning",
-          "message": "其他指标的方向词不影响用户所问指标的结论"
-        }
-      ],
+      "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": "只判断客单价方向，忽略退款等其他指标方向"
     },
     {
       "id": "D05",
@@ -311,7 +324,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "D06",
@@ -328,7 +342,8 @@
         }
       ],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": "核心销量正确，evidence_hygiene 仅警告"
     },
     {
       "id": "C01",
@@ -339,7 +354,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "C02",
@@ -356,7 +372,8 @@
         }
       ],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": "核心过敏原和引用正确，cite_max 仅警告"
     },
     {
       "id": "C03",
@@ -367,7 +384,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "C04",
@@ -378,7 +396,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "C05",
@@ -389,7 +408,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "C06",
@@ -400,7 +420,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "C07",
@@ -411,7 +432,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "C08",
@@ -422,18 +444,34 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "V01",
       "category": "version",
-      "official_passed": true,
-      "business_passed": true,
-      "official_earned": 2.0,
+      "official_passed": false,
+      "business_passed": false,
+      "official_earned": 0.0,
       "points": 2.0,
       "warnings": [],
-      "hard_failures": [],
-      "core_failed_checks": []
+      "hard_failures": [
+        {
+          "code": "numbers_none",
+          "severity": "hard",
+          "message": "回答里出现了不该出现的数字 25"
+        },
+        {
+          "code": "cite_none",
+          "severity": "hard",
+          "message": "引用了不该引用的 KB-024"
+        }
+      ],
+      "core_failed_checks": [
+        "cite_none",
+        "numbers_none"
+      ],
+      "business_rule": null
     },
     {
       "id": "V02",
@@ -444,7 +482,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "V03",
@@ -455,7 +494,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "H01",
@@ -466,7 +506,8 @@
       "points": 3.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "H02",
@@ -477,10 +518,61 @@
       "points": 3.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "H03",
+      "category": "hybrid",
+      "official_passed": false,
+      "business_passed": false,
+      "official_earned": 0.0,
+      "points": 3.0,
+      "warnings": [],
+      "hard_failures": [
+        {
+          "code": "answer_type_in",
+          "severity": "hard",
+          "message": "answer_type 应是 hybrid 之一"
+        },
+        {
+          "code": "numbers_all",
+          "severity": "hard",
+          "message": "回答里没有出现 689"
+        },
+        {
+          "code": "fact_all",
+          "severity": "hard",
+          "message": "回答里没提到，KB-028 的 quote 里也没有：900"
+        },
+        {
+          "code": "text_any",
+          "severity": "hard",
+          "message": "回答里一个期望说法都没有"
+        },
+        {
+          "code": "cite_all",
+          "severity": "hard",
+          "message": "没有引用 KB-028"
+        },
+        {
+          "code": "evidence_required",
+          "severity": "hard",
+          "message": "回答里的数字没有给出对应的数据库查询"
+        }
+      ],
+      "core_failed_checks": [
+        "answer_type_in",
+        "cite_all",
+        "evidence_required",
+        "fact_all",
+        "numbers_all",
+        "text_any"
+      ],
+      "business_rule": null
+    },
+    {
+      "id": "H04",
       "category": "hybrid",
       "official_passed": true,
       "business_passed": true,
@@ -488,24 +580,8 @@
       "points": 3.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
-    },
-    {
-      "id": "H04",
-      "category": "hybrid",
-      "official_passed": false,
-      "business_passed": true,
-      "official_earned": 0.0,
-      "points": 3.0,
-      "warnings": [
-        {
-          "code": "evidence_hygiene",
-          "severity": "warning",
-          "message": "工具结果过多，但不代表核心业务结论错误"
-        }
-      ],
-      "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": "当前售价和建档价结论正确，evidence_hygiene 仅警告"
     },
     {
       "id": "H05",
@@ -516,7 +592,8 @@
       "points": 3.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "H06",
@@ -547,7 +624,8 @@
         "evidence_required",
         "numbers_all",
         "text_any"
-      ]
+      ],
+      "business_rule": "必须回答零营业额事实，并说明是否找到原因"
     },
     {
       "id": "T01",
@@ -558,18 +636,40 @@
       "points": 3.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "T02",
       "category": "multi_turn",
-      "official_passed": true,
-      "business_passed": true,
-      "official_earned": 3.0,
+      "official_passed": false,
+      "business_passed": false,
+      "official_earned": 2.0,
       "points": 3.0,
       "warnings": [],
-      "hard_failures": [],
-      "core_failed_checks": []
+      "hard_failures": [
+        {
+          "code": "answer_type_in",
+          "severity": "hard",
+          "message": "answer_type 应是 doc/hybrid 之一"
+        },
+        {
+          "code": "fact_all",
+          "severity": "hard",
+          "message": "回答里没提到，KB-022 的 quote 里也没有：8600"
+        },
+        {
+          "code": "cite_all",
+          "severity": "hard",
+          "message": "没有引用 KB-022"
+        }
+      ],
+      "core_failed_checks": [
+        "answer_type_in",
+        "cite_all",
+        "fact_all"
+      ],
+      "business_rule": null
     },
     {
       "id": "T03",
@@ -580,7 +680,8 @@
       "points": 3.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "F01",
@@ -591,7 +692,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "F02",
@@ -602,7 +704,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "F03",
@@ -613,7 +716,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "F04",
@@ -624,7 +728,8 @@
       "points": 2.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "S01",
@@ -635,7 +740,8 @@
       "points": 3.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "S02",
@@ -646,7 +752,8 @@
       "points": 3.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "S03",
@@ -657,7 +764,8 @@
       "points": 3.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     },
     {
       "id": "N01",
@@ -668,7 +776,8 @@
       "points": 1.0,
       "warnings": [],
       "hard_failures": [],
-      "core_failed_checks": []
+      "core_failed_checks": [],
+      "business_rule": null
     }
   ]
 }
