@@ -5,9 +5,11 @@ from __future__ import annotations
 import threading
 import time
 import traceback
+import json
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Optional
 
 
@@ -61,11 +63,20 @@ class Trace:
 
 
 class TraceStore:
-    def __init__(self, capacity: int = 200) -> None:
+    def __init__(self, capacity: int = 200, directory: Optional[Path] = None) -> None:
         self._data: "OrderedDict[str, dict]" = OrderedDict()
         self._lock = threading.Lock()
         self.capacity = capacity
         self._counter = 0
+        self.directory = Path(directory).resolve() if directory else None
+        if self.directory:
+            self.directory.mkdir(parents=True, exist_ok=True)
+            # Keep generated IDs monotonic across service restarts.
+            for path in self.directory.glob("t-*-*.json"):
+                try:
+                    self._counter = max(self._counter, int(path.stem.rsplit("-", 1)[1]))
+                except (ValueError, IndexError):
+                    continue
 
     def new_id(self, today: str) -> str:
         with self._lock:
@@ -73,12 +84,39 @@ class TraceStore:
             return "t-%s-%04d" % (today.replace("-", ""), self._counter)
 
     def save(self, trace: Trace) -> None:
+        payload = trace.as_dict()
         with self._lock:
-            self._data[trace.trace_id] = trace.as_dict()
+            self._data[trace.trace_id] = payload
             self._data.move_to_end(trace.trace_id)
             while len(self._data) > self.capacity:
                 self._data.popitem(last=False)
+            if self.directory:
+                target = self.directory / (trace.trace_id + ".json")
+                temporary = target.with_suffix(".json.tmp")
+                temporary.write_text(
+                    json.dumps(payload, ensure_ascii=False, indent=2, default=str),
+                    encoding="utf-8",
+                )
+                temporary.replace(target)
 
     def get(self, trace_id: str) -> Optional[dict]:
+        if not trace_id or Path(trace_id).name != trace_id:
+            return None
         with self._lock:
-            return self._data.get(trace_id)
+            cached = self._data.get(trace_id)
+            if cached is not None:
+                return cached
+            if not self.directory:
+                return None
+            path = self.directory / (trace_id + ".json")
+            if not path.is_file():
+                return None
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                return None
+            self._data[trace_id] = payload
+            self._data.move_to_end(trace_id)
+            while len(self._data) > self.capacity:
+                self._data.popitem(last=False)
+            return payload

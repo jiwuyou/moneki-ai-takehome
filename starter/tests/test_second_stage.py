@@ -5,6 +5,7 @@ from pathlib import Path
 
 from kbqa.index import content_key
 from kbqa.service import Service
+from kbqa.trace import Trace, TraceStore
 
 
 def build_service() -> Service:
@@ -73,3 +74,19 @@ def test_trace_contains_plan_and_search_for_grounded_answer():
     assert "search" in names
     assert response["data_evidence"]
     assert response["citations"]
+
+
+def test_trace_store_persists_and_reloads_after_restart(tmp_path):
+    directory = tmp_path / "traces"
+    first = TraceStore(directory=directory)
+    trace = Trace(first.new_id("2026-09-01"), "debug question", "session")
+    trace.step("plan", {"kind": "data"})
+    first.save(trace)
+    stored = directory / (trace.trace_id + ".json")
+    assert stored.is_file()
+
+    restarted = TraceStore(directory=directory)
+    loaded = restarted.get(trace.trace_id)
+    assert loaded is not None
+    assert loaded["trace_id"] == trace.trace_id
+    assert loaded["steps"][0]["step"] == "plan"

@@ -75,7 +75,7 @@ python3 eval/llm_gateway.py proxy \
 
 再将代理打印的地址设置为 `LLM_BASE_URL`。代理日志会记录请求 messages、工具定义和响应摘要；Key 只记录长度，不记录值。
 
-服务自己的 `/api/trace/{trace_id}` 也会记录脱敏后的完整模型请求、每轮工具调用、工具结果、模型输出和校验结果，不记录 Authorization。
+服务自己的 `/api/trace/{trace_id}` 也会记录脱敏后的完整模型请求、每轮工具调用、工具结果、模型输出和校验结果，不记录 Authorization。每次 trace 同时持久化到 `starter/var/traces/{trace_id}.json`，服务重启后仍可读取；`var/` 已被 Git 忽略。
 
 ## 6. 没有 Key 时会怎样
 

@@ -32,7 +32,7 @@ class Service:
     def __init__(self, settings: Optional[Settings] = None) -> None:
         self.settings = settings or load_settings()
         self.sessions = SessionStore()
-        self.traces = TraceStore()
+        self.traces = TraceStore(directory=self.settings.var_dir / "traces")
         # Rebuild the small local SQLite database on startup so a changed
         # source dataset or policy can never leave stale metrics in service.
         self.rebuild(only_if_missing=False)
