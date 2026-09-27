@@ -4,6 +4,8 @@
 
 本项目提供一套基于 POS 数据和公司知识库的经营看板与运营问答服务。系统固定使用 `2026-09-01` 作为“今天”，指标按照知识库当前有效的 `KB-001` 口径计算。
 
+本项目同时保留两种质量结果：作业方 `eval/run_eval.py` 的官方分数，以及不修改官方评测器的业务质量覆盖分。业务覆盖层把“工具调用或证据过多但核心事实正确”记为 warning，把事实错误、证据不匹配、危险操作和无法回答关键问题保留为业务失败。
+
 ### 三步启动
 
 ```bash
@@ -172,6 +174,7 @@ FastAPI / 看板
 - SQLite 保留 POS 的原始关系结构，清洗后继续使用 SQL 计算指标，便于独立核算。
 - BM25 和规则化别名不依赖外部向量服务，换数据或知识库后可以离线重建。
 - DeepSeek 使用 OpenAI 兼容协议和环境变量接入，mock/live 两条路径共享工具和证据校验。
+- live 文档/混合问题使用两阶段模型 RAG：代码先做初始 Retriever 查询，模型结合会话和初始片段最多生成一次精炼 `search_kb` query，代码执行最终检索，再由模型回答；版本过滤、引用和证据仍由代码校验。
 - 原生 HTML/CSS/JavaScript 看板不引入额外前端构建链，评审只需启动一个服务。
 
 ### 口径和歧义取舍
@@ -182,6 +185,36 @@ FastAPI / 看板
 - 商品现行售价以通知和 POS 实收为准，`products.unit_price` 只作为建档价参考。
 - 周报、会议纪要和活动复盘中的人工估算不能覆盖数据库结果。
 - 无法确定原因时给出已确认数字，并明确说明知识库没有找到原因，不猜测。
+
+### 业务质量评分
+
+官方评测命令和结果保持原样：
+
+```bash
+python3 eval/run_eval.py \
+  --base-url http://127.0.0.1:8000 \
+  --questions eval/public_questions.jsonl
+```
+
+在此基础上运行业务质量覆盖层：
+
+```bash
+python3 eval/business_eval.py \
+  --report report.json \
+  --out business_report
+```
+
+它不会修改官方分数，而是额外判断：证据冗余、额外引用和其他指标的方向词是否只是业务 warning；关键事实错误、引用矛盾、安全失败和未回答核心问题仍然判为业务失败。详细规则见 `eval/business_rules.py`，结果见 `business_report.md`。
+
+### 两阶段模型 RAG
+
+live 模式下，文档或混合问题按以下顺序处理：
+
+```text
+代码初始检索 → 模型查看初始片段 → 最多一次精炼 search_kb → 模型基于最终片段回答
+```
+
+纯数据库问题不做无意义的知识库检索；同一回合不会无限重复 `search_kb`。所有检索结果、精炼 query、工具调用和最终提示词都进入 trace。
 
 第一关口径和验证见 [`FIRST_STAGE.md`](FIRST_STAGE.md)，第二关根因见 [`DEBUG_LOG.md`](DEBUG_LOG.md)，演示步骤见 [`DEMO.md`](DEMO.md)。
 
